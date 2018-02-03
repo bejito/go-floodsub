@@ -89,6 +89,8 @@ type PubSubRouter interface {
 	RemovePeer(peer.ID)
 	HandleRPC(*RPC)
 	Publish(peer.ID, *pb.Message)
+	Join(topic string)
+	Leave(topic string)
 }
 
 type Message struct {
@@ -265,6 +267,7 @@ func (p *PubSub) handleRemoveSubscription(sub *Subscription) {
 	if len(subs) == 0 {
 		delete(p.myTopics, sub.topic)
 		p.announce(sub.topic, false)
+		p.rt.Leave(sub.topic)
 	}
 }
 
@@ -279,6 +282,7 @@ func (p *PubSub) handleAddSubscription(req *addSubReq) {
 	// announce we want this topic
 	if len(subs) == 0 {
 		p.announce(sub.topic, true)
+		p.rt.Join(sub.topic)
 	}
 
 	// make new if not there
